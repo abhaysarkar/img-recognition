@@ -29,10 +29,15 @@ public class AadhaarController {
     }
     
     @PostMapping("/extract")
-    public ResponseEntity<String> extractAadhaar(@ModelAttribute CardDataDTO formData) {
+    public ResponseEntity<String> extractAadhaar(@ModelAttribute CardDataDTO formData) throws IOException {
         MultipartFile file = formData.getFile();
         String cardType = formData.getCardName();
         ITesseract tesseract = new Tesseract();
+        
+        
+        tesseract.setDatapath(new ClassPathResource("tessdata").getFile().getPath());
+        tesseract.setLanguage("eng");
+
         try {
             // Get the path to the tessdata directory in the resources folder
             ClassPathResource resource = new ClassPathResource("tessdata");
