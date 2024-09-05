@@ -188,81 +188,149 @@ public class AadhaarController {
 //		}
 //	}
 
+//	@PostMapping("/extract")
+//	public ResponseEntity<String> extractAadhaar(@ModelAttribute CardDataDTO formData) {
+//		Logger logger = LoggerFactory.getLogger(getClass()); // Initialize logger
+//		MultipartFile file = formData.getFile();
+//		String cardType = formData.getCardName();
+//		ITesseract tesseract = new Tesseract();
+//
+//		try {
+//			// Load tessdata from the classpath as a stream
+//			logger.info("Loading tessdata for OCR...");
+//			ClassPathResource tessdataResource = new ClassPathResource("tessdata/eng.traineddata");
+//			File tessdataDir = Files.createTempDirectory("tessdata").toFile();
+//
+//			// Copy tessdata files to temporary location because Tesseract requires a file
+//			// path
+//			logger.info("Copying tessdata to temporary directory...");
+//			File engFile = new File(tessdataDir, "eng.traineddata");
+//			try (InputStream is = tessdataResource.getInputStream()) {
+//				Files.copy(is, engFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
+//			}
+//
+//			// Set Tesseract's data path to the temporary tessdata directory
+//			tesseract.setDatapath(tessdataDir.getAbsolutePath());
+//			tesseract.setLanguage("eng");
+//
+//			// Use in-memory storage for the uploaded image
+//			logger.info("Reading uploaded image file...");
+//			ByteArrayInputStream bis = new ByteArrayInputStream(file.getBytes());
+//			BufferedImage image = ImageIO.read(bis);
+//
+//			// Perform OCR on the in-memory image
+//			logger.info("Performing OCR...");
+//			String result = tesseract.doOCR(image);
+//
+//			String cardNumber = "";
+//			switch (cardType) {
+//			case "Aadhar Card":
+//				logger.info("Extracting Aadhar card number...");
+//				cardNumber = extractAadhaarNumber(result);
+//				break;
+//			case "Debit Card":
+//				logger.info("Extracting Debit card number...");
+//				cardNumber = extractDebitCardNumber(result);
+//				break;
+//			case "Credit Card":
+//				logger.info("Extracting Credit card number...");
+//				cardNumber = extractCreditCardNumber(result);
+//				break;
+//			case "Aabha Card":
+//				logger.info("Extracting Aabha card number...");
+//				cardNumber = extractAabhaCardNumber(result);
+//				break;
+//			case "Driving Licence":
+//				logger.info("Extracting Driving Licence number...");
+//				cardNumber = extractDrivingLicenseNumber(result);
+//				break;
+//			default:
+//				logger.warn("Unsupported card type: {}", cardType);
+//				cardNumber = "Card type not supported";
+//			}
+//
+//			return ResponseEntity.ok(cardNumber);
+//
+//		} catch (TesseractException e) {
+//			logger.error("Tesseract OCR error: {}", e.getMessage(), e);
+//			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("OCR error: " + e.getMessage());
+//		} catch (IOException e) {
+//			logger.error("File processing error: {}", e.getMessage(), e);
+//			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+//					.body("Error processing image: " + e.getMessage());
+//		} catch (Exception e) {
+//			logger.error("Unexpected error: {}", e.getMessage(), e);
+//			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Unexpected error: " + e.getMessage());
+//		}
+//	}
+	
+	
+	
+	
 	@PostMapping("/extract")
 	public ResponseEntity<String> extractAadhaar(@ModelAttribute CardDataDTO formData) {
-		Logger logger = LoggerFactory.getLogger(getClass()); // Initialize logger
-		MultipartFile file = formData.getFile();
-		String cardType = formData.getCardName();
-		ITesseract tesseract = new Tesseract();
+	    Logger logger = LoggerFactory.getLogger(getClass()); // Initialize logger
+	    MultipartFile file = formData.getFile();
+	    String cardType = formData.getCardName();
+	    ITesseract tesseract = new Tesseract();
 
-		try {
-			// Load tessdata from the classpath as a stream
-			logger.info("Loading tessdata for OCR...");
-			ClassPathResource tessdataResource = new ClassPathResource("tessdata/eng.traineddata");
-			File tessdataDir = Files.createTempDirectory("tessdata").toFile();
+	    try {
+	        // Set Tesseract's data path to the installed location on Heroku
+	        logger.info("Setting tessdata path for OCR...");
+	        tesseract.setDatapath("/app/.apt/usr/share/tesseract-ocr/4.00/tessdata");
+	        tesseract.setLanguage("eng");
 
-			// Copy tessdata files to temporary location because Tesseract requires a file
-			// path
-			logger.info("Copying tessdata to temporary directory...");
-			File engFile = new File(tessdataDir, "eng.traineddata");
-			try (InputStream is = tessdataResource.getInputStream()) {
-				Files.copy(is, engFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
-			}
+	        // Use in-memory storage for the uploaded image
+	        logger.info("Reading uploaded image file...");
+	        ByteArrayInputStream bis = new ByteArrayInputStream(file.getBytes());
+	        BufferedImage image = ImageIO.read(bis);
 
-			// Set Tesseract's data path to the temporary tessdata directory
-			tesseract.setDatapath(tessdataDir.getAbsolutePath());
-			tesseract.setLanguage("eng");
+	        // Perform OCR on the in-memory image
+	        logger.info("Performing OCR...");
+	        String result = tesseract.doOCR(image);
 
-			// Use in-memory storage for the uploaded image
-			logger.info("Reading uploaded image file...");
-			ByteArrayInputStream bis = new ByteArrayInputStream(file.getBytes());
-			BufferedImage image = ImageIO.read(bis);
+	        String cardNumber = "";
+	        switch (cardType) {
+	            case "Aadhar Card":
+	                logger.info("Extracting Aadhar card number...");
+	                cardNumber = extractAadhaarNumber(result);
+	                break;
+	            case "Debit Card":
+	                logger.info("Extracting Debit card number...");
+	                cardNumber = extractDebitCardNumber(result);
+	                break;
+	            case "Credit Card":
+	                logger.info("Extracting Credit card number...");
+	                cardNumber = extractCreditCardNumber(result);
+	                break;
+	            case "Aabha Card":
+	                logger.info("Extracting Aabha card number...");
+	                cardNumber = extractAabhaCardNumber(result);
+	                break;
+	            case "Driving Licence":
+	                logger.info("Extracting Driving Licence number...");
+	                cardNumber = extractDrivingLicenseNumber(result);
+	                break;
+	            default:
+	                logger.warn("Unsupported card type: {}", cardType);
+	                cardNumber = "Card type not supported";
+	        }
 
-			// Perform OCR on the in-memory image
-			logger.info("Performing OCR...");
-			String result = tesseract.doOCR(image);
+	        return ResponseEntity.ok(cardNumber);
 
-			String cardNumber = "";
-			switch (cardType) {
-			case "Aadhar Card":
-				logger.info("Extracting Aadhar card number...");
-				cardNumber = extractAadhaarNumber(result);
-				break;
-			case "Debit Card":
-				logger.info("Extracting Debit card number...");
-				cardNumber = extractDebitCardNumber(result);
-				break;
-			case "Credit Card":
-				logger.info("Extracting Credit card number...");
-				cardNumber = extractCreditCardNumber(result);
-				break;
-			case "Aabha Card":
-				logger.info("Extracting Aabha card number...");
-				cardNumber = extractAabhaCardNumber(result);
-				break;
-			case "Driving Licence":
-				logger.info("Extracting Driving Licence number...");
-				cardNumber = extractDrivingLicenseNumber(result);
-				break;
-			default:
-				logger.warn("Unsupported card type: {}", cardType);
-				cardNumber = "Card type not supported";
-			}
-
-			return ResponseEntity.ok(cardNumber);
-
-		} catch (TesseractException e) {
-			logger.error("Tesseract OCR error: {}", e.getMessage(), e);
-			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("OCR error: " + e.getMessage());
-		} catch (IOException e) {
-			logger.error("File processing error: {}", e.getMessage(), e);
-			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-					.body("Error processing image: " + e.getMessage());
-		} catch (Exception e) {
-			logger.error("Unexpected error: {}", e.getMessage(), e);
-			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Unexpected error: " + e.getMessage());
-		}
+	    } catch (TesseractException e) {
+	        logger.error("Tesseract OCR error: {}", e.getMessage(), e);
+	        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("OCR error: " + e.getMessage());
+	    } catch (IOException e) {
+	        logger.error("File processing error: {}", e.getMessage(), e);
+	        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+	                .body("Error processing image: " + e.getMessage());
+	    } catch (Exception e) {
+	        logger.error("Unexpected error: {}", e.getMessage(), e);
+	        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Unexpected error: " + e.getMessage());
+	    }
 	}
+
 
 	private String extractAadhaarNumber(String ocrText) {
 		// Aadhaar number regex pattern (12 digits)
