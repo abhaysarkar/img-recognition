@@ -231,7 +231,7 @@ public class AadhaarController {
 			String result = tesseract.doOCR(image);
 
 			String cardNumber = "1111 1111 1111";
-			return cardNumber;
+			//return cardNumber;
 			switch (cardType) {
 			case "Aadhar Card":
 				cardNumber = extractAadhaarNumber(result);
