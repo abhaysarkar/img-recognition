@@ -573,7 +573,7 @@ public ResponseEntity<String> extractAadhaar(@ModelAttribute CardDataDTO formDat
     try {
         if (System.getenv("DYNO") != null) {
             // Running on Heroku
-            tessdataPath = "/app/vendor/tesseract-ocr/4.00/tessdata";
+            tessdataPath = "/app/vendor/tesseract-ocr/share/tessdata";
         } else {
             // Running locally
             tessdataPath = new ClassPathResource("tessdata").getFile().getPath();
