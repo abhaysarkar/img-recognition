@@ -421,45 +421,90 @@ public class AadhaarController {
 		return "Welcome to my application";
 	}
 
-    @PostMapping("/extract")
-    public ResponseEntity<String> extractAadhaar(@ModelAttribute CardDataDTO formData) throws IOException {
-        MultipartFile file = formData.getFile();
-        String cardType = formData.getCardName();
-        ITesseract tesseract = new Tesseract();
+    // @PostMapping("/extract")
+    // public ResponseEntity<String> extractAadhaar(@ModelAttribute CardDataDTO formData) throws IOException {
+    //     MultipartFile file = formData.getFile();
+    //     String cardType = formData.getCardName();
+    //     ITesseract tesseract = new Tesseract();
         
         
-        tesseract.setDatapath(new ClassPathResource("tessdata").getFile().getPath());
-        tesseract.setLanguage("eng");
+    //     tesseract.setDatapath(new ClassPathResource("tessdata").getFile().getPath());
+    //     tesseract.setLanguage("eng");
 
-        try {
-            // Get the path to the tessdata directory in the resources folder
-            ClassPathResource resource = new ClassPathResource("tessdata");
-            File tessdataDir = resource.getFile();
-            // Set the Tesseract data path
-            tesseract.setDatapath(tessdataDir.getAbsolutePath());
-            tesseract.setLanguage("eng");
-            // Save the uploaded file to a temporary location
-            File tempFile = File.createTempFile("aadhaar", ".png");
-            file.transferTo(tempFile);
-            // Perform OCR on the image
-            String result = tesseract.doOCR(tempFile);
-            // Extract Aadhaar number using regex
-            String cardNumber = "";
-            if("Aadhar Card".equals(cardType)) {
-                cardNumber = extractAadhaarNumber(result);
-            }
+    //     try {
+    //         // Get the path to the tessdata directory in the resources folder
+    //         ClassPathResource resource = new ClassPathResource("tessdata");
+    //         File tessdataDir = resource.getFile();
+    //         // Set the Tesseract data path
+    //         tesseract.setDatapath(tessdataDir.getAbsolutePath());
+    //         tesseract.setLanguage("eng");
+    //         // Save the uploaded file to a temporary location
+    //         File tempFile = File.createTempFile("aadhaar", ".png");
+    //         file.transferTo(tempFile);
+    //         // Perform OCR on the image
+    //         String result = tesseract.doOCR(tempFile);
+    //         // Extract Aadhaar number using regex
+    //         String cardNumber = "";
+    //         if("Aadhar Card".equals(cardType)) {
+    //             cardNumber = extractAadhaarNumber(result);
+    //         }
             
-            if("Aabha Card".equals(cardType)) {
-                cardNumber = extractAabhaCardNumber(result);
-            }
+    //         if("Aabha Card".equals(cardType)) {
+    //             cardNumber = extractAabhaCardNumber(result);
+    //         }
             
-            // Clean up temporary file
-            Files.deleteIfExists(tempFile.toPath());
-            return ResponseEntity.ok(cardNumber);
-        } catch (TesseractException | IOException e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error processing image");
-        }
-    }
+    //         // Clean up temporary file
+    //         Files.deleteIfExists(tempFile.toPath());
+    //         return ResponseEntity.ok(cardNumber);
+    //     } catch (TesseractException | IOException e) {
+    //         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error processing image");
+    //     }
+    // }
+
+
+
+	@PostMapping("/extract")
+	public ResponseEntity<String> extractAadhaar(@ModelAttribute CardDataDTO formData) throws IOException {
+		MultipartFile file = formData.getFile();
+		String cardType = formData.getCardName();
+		ITesseract tesseract = new Tesseract();
+
+		// Set Tesseract data path dynamically
+		String tessdataPath;
+		if (System.getenv("DYNO") != null) {
+			// Running on Heroku
+			tessdataPath = "/app/.apt/usr/share/tesseract-ocr/4.00/tessdata";
+		} else {
+			// Running locally
+			tessdataPath = new ClassPathResource("tessdata").getFile().getPath();
+		}
+		tesseract.setDatapath(tessdataPath);
+		tesseract.setLanguage("eng");
+
+		try {
+			// Save the uploaded file to a temporary location
+			File tempFile = File.createTempFile("aadhaar", ".png");
+			file.transferTo(tempFile);
+
+			// Perform OCR on the image
+			String result = tesseract.doOCR(tempFile);
+
+			// Extract card number based on type
+			String cardNumber = "";
+			if ("Aadhar Card".equals(cardType)) {
+				cardNumber = extractAadhaarNumber(result);
+			} else if ("Aabha Card".equals(cardType)) {
+				cardNumber = extractAabhaCardNumber(result);
+			}
+
+			// Clean up temporary file
+			Files.deleteIfExists(tempFile.toPath());
+
+			return ResponseEntity.ok(cardNumber);
+		} catch (TesseractException | IOException e) {
+			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error processing image");
+		}
+	}
 
 	private String extractAadhaarNumber(String ocrText) {
 		// Aadhaar number regex pattern (12 digits)
